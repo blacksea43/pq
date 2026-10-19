@@ -1,0 +1,120 @@
+
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TXT Görüntüleyici</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;padding:30px 15px;min-height:100vh;background:#111118;color:#f4f0ff;font-family:Arial,sans-serif}
+main{max-width:850px;margin:auto}
+h1{font-size:30px;margin-bottom:8px}
+p{color:#aaa5bd;line-height:1.6}
+.panel{margin-top:24px;background:#1b1b25;border:1px solid #343044;border-radius:16px;overflow:hidden}
+.head,.foot{padding:16px 20px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.head{border-bottom:1px solid #343044}
+.foot{border-top:1px solid #343044}
+pre{margin:0;padding:24px;min-height:180px;max-height:70vh;overflow:auto;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.8;font:14px/1.8 Consolas,monospace}
+button,.link{padding:10px 14px;border:1px solid #8b70e8;border-radius:9px;background:#8b70e822;color:#f4f0ff;text-decoration:none;cursor:pointer;font-size:13px}
+small{color:#aaa5bd}
+</style>
+</head>
+<body>
+<main>
+<h1>Metin Görüntüleyici</h1>
+<p>Google Drive üzerindeki TXT dosyasının içeriği.</p>
+
+<section class="panel">
+  <div class="head">
+    <strong>TXT Dosyası</strong>
+    <small id="status">Yükleniyor...</small>
+  </div>
+
+  <pre id="content">İçerik yükleniyor...</pre>
+
+  <div class="foot">
+    <small id="updated"></small>
+    <div>
+      <button id="reload">Yenile</button>
+      <a id="open" class="link" target="_blank"
+         rel="noopener noreferrer">Drive'da aç</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<script>
+(() => {
+  // Yalnızca buraya kendi Google Drive paylaşım linkini ekle.
+  const DRIVE_LINK = "https://drive.google.com/file/d/10Q_u9kB9M3qydahQOlC6xOZeXyD9MEEu/view?usp=sharing";
+
+  const content = document.getElementById("content");
+  const status = document.getElementById("status");
+  const updated = document.getElementById("updated");
+  const open = document.getElementById("open");
+  const reload = document.getElementById("reload");
+
+  function getFileId(url) {
+    return url.match(/\/file\/d\/([^/]+)/)?.[1]
+      || url.match(/[?&]id=([^&]+)/)?.[1]
+      || null;
+  }
+
+  async function loadText() {
+    const id = getFileId(DRIVE_LINK);
+
+    open.href = DRIVE_LINK;
+
+    if (!id) {
+      content.textContent =
+        "Geçerli bir Google Drive dosya paylaşım linki ekle.";
+      status.textContent = "Link gerekli";
+      return;
+    }
+
+    status.textContent = "Yükleniyor...";
+    content.textContent = "TXT dosyası okunuyor...";
+    reload.disabled = true;
+
+    try {
+      const url =
+        "https://drive.google.com/uc?export=download&id="
+        + encodeURIComponent(id);
+
+      const response = await fetch(url, { cache: "no-store" });
+
+      if (!response.ok) throw new Error("HTTP " + response.status);
+
+      const text = await response.text();
+
+      if (
+        text.includes("<!DOCTYPE html") ||
+        text.includes("<html")
+      ) {
+        throw new Error("Drive düz metin yerine HTML döndürdü.");
+      }
+
+      content.textContent = text;
+      status.textContent = "Güncel";
+      updated.textContent =
+        "Son yükleme: " +
+        new Date().toLocaleTimeString("tr-TR");
+    } catch (error) {
+      content.textContent =
+        "Drive dosyası tarayıcı üzerinden otomatik okunamadı.\n\n" +
+        "Google Drive erişim veya CORS kısıtlaması uyguluyor olabilir. " +
+        "Dosyayı açmak için aşağıdaki 'Drive'da aç' bağlantısını kullan.\n\n" +
+        "Otomatik metin gösterimi için bir ara servis gerekir.";
+      status.textContent = "Doğrudan erişim başarısız";
+    } finally {
+      reload.disabled = false;
+    }
+  }
+
+  reload.addEventListener("click", loadText);
+  loadText();
+})();
+</script>
+</body>
+</html>
