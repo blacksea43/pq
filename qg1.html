@@ -8,7 +8,7 @@
 <meta name="bingbot" content="noindex, nofollow, noarchive, nosnippet">
 <meta name="referrer" content="no-referrer">
 <meta name="theme-color" content="#111118">
-<title>Metin</title>
+<title>question og</title>
 <style>
 :root {
   color-scheme: dark;
@@ -42,7 +42,7 @@ pre {
 </head>
 <body>
 <main>
-  <pre id="content"></pre>
+  <pre id="content">Yükleniyor...</pre>
 </main>
 
 <script>
@@ -86,7 +86,8 @@ pre {
 
       content.textContent = text;
     } catch (error) {
-      // Sayfada ek yazı gösterilmez; hata yalnızca konsola yazılır.
+      // Hata durumunda "Yükleniyor..." yazısı kaldırılır; hata yalnızca konsola yazılır.
+      content.textContent = "";
       console.error("TXT yükleme hatası:", error);
     }
   }
